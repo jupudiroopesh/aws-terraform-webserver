@@ -10,6 +10,6 @@ output "web_vpc_instance" {
   value = module.web_vpc_instance
 }
 
-//output "web-elb-dns-name" {
-//  value = aws_elb
-//}
+output "web-elb-dns-name" {
+  value = aws_lb.web-server-elb.dns_name
+}
