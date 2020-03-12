@@ -1,5 +1,24 @@
 # aws-terraform-webserver
 
+1. Clone the repo https://github.com/jupudiroopesh/aws-terraform-webserver
+1. Install terraform *Terraform v0.12.21*
+1. cd into directory cd /aws-terraform-webserver/ terraform/live/dev/infra/
+1. Please add your aws credentials using `aws configure` or add your details in `provider.tf file`
+
+`provider "aws" {
+  region     = "us-west-2"
+  access_key = "my-access-key"
+  secret_key = "my-secret-key"
+}`
+ 
+1. `terraform init`
+1. `terraform plan`
+1. `terraform apply`
+
+I have pasted the whole output which i have executed in my local machine and i have used my own aws credentials
+
+
+
 ```H-053:roopesh_aws Roopesh.Jupudi$ git clone https://github.com/jupudiroopesh/aws-terraform-webserver.git
 Cloning into 'aws-terraform-webserver'...
 remote: Enumerating objects: 26, done.
