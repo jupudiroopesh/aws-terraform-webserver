@@ -41,12 +41,14 @@ module "web_vpc_instance" {
   user_data = file("install_apache.sh")
 
   tags = merge(local.common_tags,
-    map("Cost", "PaidService")
+    map("Cost", "PaidService",
+        "Server", "Web Server"
+    )
   )
 }
 
-resource "aws_elb" "terra-elb" {
-  name               = "terra-elb"
+resource "aws_elb" "web-elb" {
+  name               = "web-server-elb"
   subnets = module.web_vpc.public_subnet_ids
   security_groups = [module.web_vpc_sg.sg_22, module.web_vpc_sg.sg_80]
 
