@@ -47,35 +47,64 @@ module "web_vpc_instance" {
   )
 }
 
-resource "aws_elb" "web-elb" {
-  name               = "web-server-elb"
-  subnets = module.web_vpc.public_subnet_ids
-  security_groups = [module.web_vpc_sg.sg_22, module.web_vpc_sg.sg_80]
 
-  depends_on = [module.web_vpc, module.web_vpc_instance]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
+resource "aws_lb_target_group" "web-server-target-group" {
   health_check {
-    healthy_threshold   = 2
+    interval            = 10
+    path                = "/index.html"
+    protocol            = "HTTP"
+    timeout             = 5
+    healthy_threshold   = 5
     unhealthy_threshold = 2
-    timeout             = 3
-    target              = "HTTP:80/index.html"
-    interval            = 30
   }
 
-  instances = module.web_vpc_instance.public_instances
-  cross_zone_load_balancing   = true
-  idle_timeout                = 100
-  connection_draining         = true
-  connection_draining_timeout = 300
+  name        = "dev-web-tg"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "instance"
+  vpc_id      = module.web_vpc.vpc_id
+}
+
+resource "aws_lb_target_group_attachment" "web-alb-target-group-attachment1" {
+  target_group_arn = aws_lb_target_group.web-server-target-group.arn
+  target_id        = element(module.web_vpc_instance.public_instances, 0)
+  port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "web-alb-target-group-attachment2" {
+  target_group_arn = aws_lb_target_group.web-server-target-group.arn
+  target_id        = element(module.web_vpc_instance.public_instances, 1)
+  port             = 80
+}
+
+resource "aws_lb_target_group_attachment" "web-alb-target-group-attachment3" {
+  target_group_arn = aws_lb_target_group.web-server-target-group.arn
+  target_id        = element(module.web_vpc_instance.public_instances, 2)
+  port             = 80
+}
+
+resource "aws_lb" "web-server-elb" {
+  name     = "web-server-elb"
+  internal = false
+  security_groups = [module.web_vpc_sg.sg_22, module.web_vpc_sg.sg_80]
+  subnets = module.web_vpc.public_subnet_ids
 
   tags = merge(local.common_tags,
-  map("Cost", "PaidService")
+    map("Cost", "PaidService",
+        "Name", "Web Server ELB")
   )
+
+  ip_address_type    = "ipv4"
+  load_balancer_type = "application"
+}
+
+resource "aws_lb_listener" "web-alb-listner" {
+  load_balancer_arn = aws_lb.web-server-elb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web-server-target-group.arn
+  }
 }
